@@ -25,7 +25,8 @@ contract SimpleStorage {
     mapping(string => uint256) public nameToFavoriteNumber;
 
     // visiblity specifiers: public, private, external, internal. By default it will be internal
-    function store(uint _favoriteNumber) public {
+    // use `virtual` to allow function override
+    function store(uint _favoriteNumber) public virtual {
         myFavoriteNumber = _favoriteNumber;
     }
 

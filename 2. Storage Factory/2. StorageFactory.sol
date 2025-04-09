@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.18;
 
-import {SimpleStorage} from "./SimpleStorage.sol";
+import {SimpleStorage} from "./1. SimpleStorage.sol";
 
 contract StorageFactory {
     SimpleStorage[] public listOfSimpleStorageContracts;
