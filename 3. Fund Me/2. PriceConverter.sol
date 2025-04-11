@@ -5,7 +5,7 @@ pragma solidity ^0.8.18;
 import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 
 // library is a special type of contract that contains reusable code, Cannot hold state varible and all functions are marked internal
-library PriceConverter{
+library PriceConverter {
     function getPrice() internal view returns(uint256) {
         // Interface defines function signatures without implementation, enabling interaction with external contracts.
         // Using the Chainlink AggregatorV3Interface to fetch the latest ETH/USD price from the deployed price feed contract.

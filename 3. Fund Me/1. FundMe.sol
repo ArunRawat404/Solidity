@@ -4,14 +4,22 @@ pragma solidity ^0.8.18;
 
 import {PriceConverter} from "./2. PriceConverter.sol";
 
-contract FundMe{
+contract FundMe {
     // Attach all the functions from the PriceConverter library to the uint256 type.
     using PriceConverter for uint256;
 
-    uint256 minimumUsd = 5e18;
+    uint256 public minimumUsd = 5e18;
 
     address[] public funders;
     mapping(address funder => uint256 amountFunded) public addressToAmountFunded;
+
+    address public owner;
+
+    // The constructor is a special function executes only once - at the time of contract deployment.
+    constructor() {
+        // Set the contract owner to the address that deployed the contract
+        owner = msg.sender;
+    }
 
     // `payable` Allows the function to receive Ether
     function fund() public payable {
@@ -27,5 +35,38 @@ contract FundMe{
         addressToAmountFunded[msg.sender] = addressToAmountFunded[msg.sender] + msg.value;
     }
 
-    // function withdraw() public {}
+    // onlyOwner is function modifier
+    function withdraw() public onlyOwner {
+        // reset the mapping addressToAmountFunded
+        // for (init; condition; increment)
+        for(uint256 funderIndex = 0; funderIndex < funders.length; funderIndex++) {
+            address funder = funders[funderIndex];
+            addressToAmountFunded[funder] = 0;
+        }
+        // reset funders arrray
+        funders = new address[](0);
+
+        /*
+         *        We can send Ether to other contracts by transfer, call and send.
+         *        To send native tokens like ETH, we need to convert the recipient's address to a payable address — done through typecasting.
+         */
+
+        // transfer (2300 gas, throws error)
+        // payable(msg.sender).transfer(address(this).balance);
+
+        // send (2300 gas, returns bool)
+        // bool sendSuccess = payable(msg.sender).send(address(this).balance);
+        // require(sendSuccess, "Send Failed");
+
+        // call (forward all gas or set gas, returns a tuple (bool success, bytes memory data))
+        (bool callSuccess, ) = payable(msg.sender).call{value: address(this).balance}("");
+        require(callSuccess, "Call Failed");
+    }
+
+    // Modifier: Reusable condition that runs before a function to restrict or control access.
+    modifier onlyOwner(){
+        require(msg.sender == owner, "Sender is not the owner!");
+        // The _ is a placeholder for the rest of the function body.
+        _;
+    }
 }
