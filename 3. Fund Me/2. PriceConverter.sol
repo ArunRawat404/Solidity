@@ -9,6 +9,7 @@ library PriceConverter {
     function getPrice() internal view returns(uint256) {
         // Interface defines function signatures without implementation, enabling interaction with external contracts.
         // Using the Chainlink AggregatorV3Interface to fetch the latest ETH/USD price from the deployed price feed contract.
+        // The address if specifically for sepolia testnet chain
         AggregatorV3Interface priceFeed = AggregatorV3Interface(0x694AA1769357215DE4FAC081bf1f309aDC325306);
         (, int256 answer, , , ) = priceFeed.latestRoundData();
 

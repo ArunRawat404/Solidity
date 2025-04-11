@@ -4,21 +4,27 @@ pragma solidity ^0.8.18;
 
 import {PriceConverter} from "./2. PriceConverter.sol";
 
+// Declares a custom error called NotOwner.
+error NotOwner();
+
 contract FundMe {
     // Attach all the functions from the PriceConverter library to the uint256 type.
     using PriceConverter for uint256;
 
-    uint256 public minimumUsd = 5e18;
+    // Constants are embedded at compile-time, saving gas by not storing in contract storage but are instead embedded directly into the contract's bytecode
+    uint256 public constant MINIMUM_USD = 5e18;
 
     address[] public funders;
     mapping(address funder => uint256 amountFunded) public addressToAmountFunded;
 
-    address public owner;
+    // Immutable variables can be assigned only once, but at deployment time — usually inside the constructor.
+    // Naming convention: prefix with `i_` to indicate immutability.
+    address public immutable i_owner;
 
     // The constructor is a special function executes only once - at the time of contract deployment.
     constructor() {
         // Set the contract owner to the address that deployed the contract
-        owner = msg.sender;
+        i_owner = msg.sender;
     }
 
     // `payable` Allows the function to receive Ether
@@ -28,7 +34,7 @@ contract FundMe {
         // 1e18 = 1 eth = 1000000000000000000 wei = 1 *10 ** 18 wei
         // Under the hood msg.value.getConversionRate() converts to PriceConverter.getConversionRate(msg.value)
         // In case of multiple arguments, first argument is always the value you're calling from (in this case msg.value), and the rest you pass normally.
-        require(msg.value.getConversionRate() >= minimumUsd, "Send minimum 5$ worth of eth");
+        require(msg.value.getConversionRate() >= MINIMUM_USD, "Send minimum 5$ worth of eth");
         // msg.sender refers to the address that called the function
         funders.push(msg.sender);
         // When accessing a mapping for a new key, Solidity returns the default value (0 for uint256)
@@ -64,9 +70,29 @@ contract FundMe {
     }
 
     // Modifier: Reusable condition that runs before a function to restrict or control access.
-    modifier onlyOwner(){
-        require(msg.sender == owner, "Sender is not the owner!");
+    modifier onlyOwner() {
+        // require(msg.sender == i_owner, "Sender is not the owner!");
+        // Custom errors save gas compared to using require with a string like require(msg.sender == i_owner, "Not owner").
+        if(msg.sender != i_owner){
+            revert NotOwner();
+        }
         // The _ is a placeholder for the rest of the function body.
         _;
+    }
+
+    // The receive is a special function which is triggered when the contract receives Ether with no data.
+    // It must be marked 'external' and 'payable'.
+    receive() external payable {
+        fund();
+    }
+
+    /*
+     *    The fallback function is called when:
+     *        1. A function that doesn't exist is called, OR
+     *        2. Ether is sent with data and no matching function is found.
+     *    It must be marked 'external' and can optionally be 'payable'.
+     */
+    fallback() external payable {
+        fund();
     }
 }
